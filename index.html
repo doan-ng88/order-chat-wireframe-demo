@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salework Chat - Order Management</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset and Basic Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            height: 100vh;
+            background-color: #f4f6f8;
+            color: #333;
+        }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 80px;
+            background-color: #ffffff;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+        }
+        .sidebar .app-name {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 40px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            color: #1976d2;
+        }
+        .sidebar .nav-icon {
+            margin: 15px 0;
+            font-size: 24px;
+            color: #757575;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .sidebar .nav-icon:hover, .sidebar .nav-icon.active {
+            color: #1976d2;
+        }
+        /* Active Icon Styles */
+        .sidebar .nav-icon.orders.active {
+            color: #1976d2;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Styles */
+        .header {
+            height: 60px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        /* Content Area */
+        .content {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Filters and Search */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .filters select, .filters input {
+            padding: 8px 12px;
+            border: 1px solid #c0c0c0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .filters .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .filters .tab {
+            padding: 8px 16px;
+            background-color: #f0f2f5;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .filters .tab.active {
+            background-color: #1976d2;
+            color: #ffffff;
+        }
+        .filters .tab .count {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+        }
+
+        /* Order List */
+        .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .order-card {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .order-id {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+        .order-date {
+            font-size: 12px;
+            color: #999999;
+        }
+        .order-body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .order-details, .shipping-info, .product-details, .payment-status {
+            flex: 1 1 200px;
+        }
+        .order-details div, .shipping-info div, .product-details div, .payment-status div {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #555555;
+        }
+        .payment-amount {
+            color: green;
+            font-weight: bold;
+        }
+        .status-label {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #ffffff;
+            font-weight: bold;
+        }
+        .status-new { background-color: #1976d2; }
+        .status-in-transit { background-color: #fdd835; }
+        .status-pending { background-color: #ffa726; }
+        .status-shipped { background-color: #66bb6a; }
+        .status-cancelled { background-color: #e53935; }
+        .status-returned { background-color: #8e24aa; }
+        .status-success { background-color: #43a047; }
+        .status-packing { background-color: #ff7043; }
+        .status-waiting { background-color: #29b6f6; }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .action-buttons button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .details-btn {
+            background-color: #1976d2;
+            color: #ffffff;
+        }
+        .details-btn:hover {
+            background-color: #1565c0;
+        }
+        .message-btn {
+            background-color: #ffffff;
+            color: #1976d2;
+            border: 1px solid #1976d2;
+        }
+        .message-btn:hover {
+            background-color: #e3f2fd;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-top: 1px solid #e0e0e0;
+            background-color: #ffffff;
+        }
+        .pagination .pages {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .pagination .pages .page-number {
+            padding: 6px 12px;
+            border: 1px solid #c0c0c0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .pagination .pages .page-number.active {
+            background-color: #1976d2;
+            color: #ffffff;
+            border-color: #1976d2;
+        }
+        .pagination .pages .page-number:hover {
+            background-color: #e3f2fd;
+        }
+        .pagination .per-page {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .pagination .per-page select {
+            padding: 6px 12px;
+            border: 1px solid #c0c0c0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        /* Scrollbar Styling */
+        .content::-webkit-scrollbar {
+            width: 8px;
+        }
+        .content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .content::-webkit-scrollbar-thumb {
+            background: #c0c0c0;
+            border-radius: 4px;
+        }
+        .content::-webkit-scrollbar-thumb:hover {
+            background: #a0a0a0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .order-body {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="app-name">Salework Chat</div>
+        <a href="#"><i class="fab fa-facebook-f nav-icon"></i></a>
+        <a href="#"><i class="fab fa-instagram nav-icon"></i></a>
+        <a href="#"><i class="fab fa-lazada nav-icon"></i></a>
+        <a href="#"><i class="fas fa-store nav-icon"></i></a>
+        <a href="#"><i class="fab fa-tiktok nav-icon"></i></a>
+        <a href="#" class="orders active"><i class="fas fa-shopping-cart nav-icon orders"></i></a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            Order Management
+        </div>
+
+        <!-- Content Area -->
+        <div class="content">
+            <!-- Filters -->
+            <div class="filters">
+                <select>
+                    <option>MIXSOON Vietnam</option>
+                    <option>Store 1</option>
+                    <option>Store 2</option>
+                </select>
+                <div class="tabs">
+                    <div class="tab active">
+                        Tất cả <span class="count">200</span>
+                    </div>
+                    <div class="tab">
+                        Chờ Xác Nhận <span class="count">50</span>
+                    </div>
+                    <div class="tab">
+                        Mới <span class="count">30</span>
+                    </div>
+                    <div class="tab">
+                        Đang Đóng Gói <span class="count">20</span>
+                    </div>
+                    <div class="tab">
+                        Chờ Gửi Hàng <span class="count">15</span>
+                    </div>
+                    <div class="tab">
+                        Đã Gửi Hàng <span class="count">40</span>
+                    </div>
+                    <div class="tab">
+                        Đang Giao <span class="count">25</span>
+                    </div>
+                    <div class="tab">
+                        Thành Công <span class="count">10</span>
+                    </div>
+                    <div class="tab">
+                        Hoàn <span class="count">5</span>
+                    </div>
+                    <div class="tab">
+                        Hủy <span class="count">10</span>
+                    </div>
+                </div>
+                <input type="text" placeholder="Tìm kiếm theo ID đơn hàng">
+                <input type="date">
+                <input type="date">
+            </div>
+
+            <!-- Order List -->
+            <div class="order-list">
+                <!-- Sample Order Card -->
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-id">ORD123456</div>
+                        <div class="order-date">Ngày đặt: 28/10/2024 14:35</div>
+                    </div>
+                    <div class="order-body">
+                        <div class="shipping-info">
+                            <div><strong>Tên người nhận:</strong> Nguyễn Văn A</div>
+                            <div><strong>Địa chỉ:</strong> 123****, Hà Nội</div>
+                            <div><strong>SĐT:</strong> 090****1234</div>
+                        </div>
+                        <div class="product-details">
+                            <div><strong>Sản phẩm:</strong> Áo thun nam</div>
+                            <div><strong>Hạn sử dụng:</strong> 31/12/2024</div>
+                        </div>
+                        <div class="payment-status">
+                            <div><strong>Tổng thanh toán:</strong> <span class="payment-amount">2,500,000 VND</span></div>
+                            <div><strong>Trạng thái:</strong> <span class="status-label status-new">MỚI</span></div>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="details-btn">Chi tiết</button>
+                        <button class="message-btn">Nhắn tin</button>
+                    </div>
+                </div>
+
+                <!-- Repeat Order Cards as Needed -->
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-id">ORD123457</div>
+                        <div class="order-date">Ngày đặt: 27/10/2024 10:20</div>
+                    </div>
+                    <div class="order-body">
+                        <div class="shipping-info">
+                            <div><strong>Tên người nhận:</strong> Trần Thị B</div>
+                            <div><strong>Địa chỉ:</strong> 456****, TP.HCM</div>
+                            <div><strong>SĐT:</strong> 091****5678</div>
+                        </div>
+                        <div class="product-details">
+                            <div><strong>Sản phẩm:</strong> Giày thể thao nữ</div>
+                            <div><strong>Hạn sử dụng:</strong> 30/11/2024</div>
+                        </div>
+                        <div class="payment-status">
+                            <div><strong>Tổng thanh toán:</strong> <span class="payment-amount">3,000,000 VND</span></div>
+                            <div><strong>Trạng thái:</strong> <span class="status-label status-in-transit">ĐANG GIAO</span></div>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="details-btn">Chi tiết</button>
+                        <button class="message-btn">Nhắn tin</button>
+                    </div>
+                </div>
+
+                <!-- Add more order-card divs to simulate multiple orders -->
+                <!-- Example of another order -->
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-id">ORD123458</div>
+                        <div class="order-date">Ngày đặt: 26/10/2024 09:15</div>
+                    </div>
+                    <div class="order-body">
+                        <div class="shipping-info">
+                            <div><strong>Tên người nhận:</strong> Lê Văn C</div>
+                            <div><strong>Địa chỉ:</strong> 789****, Đà Nẵng</div>
+                            <div><strong>SĐT:</strong> 092****9012</div>
+                        </div>
+                        <div class="product-details">
+                            <div><strong>Sản phẩm:</strong> Túi xách da</div>
+                            <div><strong>Hạn sử dụng:</strong> 31/01/2025</div>
+                        </div>
+                        <div class="payment-status">
+                            <div><strong>Tổng thanh toán:</strong> <span class="payment-amount">1,800,000 VND</span></div>
+                            <div><strong>Trạng thái:</strong> <span class="status-label status-shipped">Đã Gửi Hàng</span></div>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="details-btn">Chi tiết</button>
+                        <button class="message-btn">Nhắn tin</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <div class="pages">
+                <div class="page-number active">1</div>
+                <div class="page-number">2</div>
+                <div class="page-number">3</div>
+                <div class="page-number">...</div>
+                <div class="page-number">10</div>
+            </div>
+            <div class="per-page">
+                <label for="per-page-select">Hiển thị:</label>
+                <select id="per-page-select">
+                    <option>25</option>
+                    <option>50</option>
+                    <option>100</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for Interactivity (Optional) -->
+    <script>
+        // Navigation Icons Placeholder
+        document.querySelectorAll('.nav-icon').forEach(function(el) {
+            el.addEventListener('click', function() {
+                document.querySelectorAll('.nav-icon').forEach(icon => icon.classList.remove('active'));
+                el.classList.add('active');
+            });
+        });
+
+        // Tab Selection Placeholder
+        document.querySelectorAll('.tab').forEach(function(el) {
+            el.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                el.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
